@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name" translatable="false">Trial Crypto Wallet</string>
+
+    <string name="wallet">Wallet</string>
+    <string name="market">Market</string>
+
+    <string name="total_balance">Total Balance</string>
+    <string name="available_balance">Available balance: %1s</string>
+    <string name="total_value_of_cryptocurrencies">Total value of cryptocurrencies: %1s</string>
+    <string name="empty_wallet_message">"You haven\'t bought any cryptocurrency yet.
+        You can buy it on the Market screen"</string>
+    <string name="go_to">Go To</string>
+    <string name="price">Price: %1s</string>
+    <string name="amount">Amount: %1s</string>
+
+    <string name="top_up_balance">Top Up Balance</string>
+    <string name="amount_title">Amount</string>
+    <string name="please_enter_correct_amount">Please enter the correct amount</string>
+    <string name="top_up">Top up</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="withdraw_funds">Withdraw Funds</string>
+    <string name="please_enter_valid_amount_up_to">Please enter a valid amount (up to %1s)</string>
+    <string name="withdraw">Withdraw</string>
+
+    <string name="sell_title">Sell</string>
+    <string name="sell">Sell %1s</string>
+    <string name="available">Available: %1s</string>
+    <string name="not_enough_cryptocurrency">Not enough cryptocurrency</string>
+
+    <string name="buy_title">Buy</string>
+    <string name="buy">Buy %1s</string>
+    <string name="cost">Cost</string>
+    <string name="insufficient_funds">Insufficient funds</string>
+
+    <string name="error_loading_data">Error loading data</string>
+    <string name="error_rate_limit">Rate limit exceeded. Try again later.</string>
+    <string name="retry">Retry</string>
+
+    <string name="back">Back</string>
+    <string name="day">Day</string>
+    <string name="week">Week</string>
+    <string name="month">Month</string>
+    <string name="half_year">6 months</string>
+    <string name="year">Year</string>
+    <string name="in_wallet">In wallet: %1s %2s</string>
+</resources>
