@@ -1,6 +1,5 @@
 package com.app.trialcryptowallet.di
 
-import com.app.trialcryptowallet.data.Constants
 import com.app.trialcryptowallet.data.network.CoinGeckoApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -9,6 +8,8 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+
+private const val BASE_URL_COIN_GECKO = "https://api.coingecko.com/api/v3/"
 
 fun provideLoggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
     level = HttpLoggingInterceptor.Level.BODY
@@ -27,7 +28,7 @@ fun provideHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient 
     .build()
 
 fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
-    .baseUrl(Constants.BASE_URL_COIN_GECKO)
+    .baseUrl(BASE_URL_COIN_GECKO)
     .client(okHttpClient)
     .addConverterFactory(GsonConverterFactory.create())
     .build()

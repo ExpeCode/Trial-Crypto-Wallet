@@ -10,7 +10,7 @@ import com.app.trialcryptowallet.data.model.Result
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInBuyCryptocurrencyDialog
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInMarket
 import com.app.trialcryptowallet.data.model.entity.CryptocurrencyInWalletEntity
-import com.app.trialcryptowallet.data.repository.Repository
+import com.app.trialcryptowallet.data.repository.RepositoryInterface
 import com.app.trialcryptowallet.utils.ConnectivityMonitor
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MarketViewModel(
-    private val repository: Repository,
+    private val repository: RepositoryInterface,
     private val connectivityMonitor: ConnectivityMonitor
 ) : ViewModel() {
 

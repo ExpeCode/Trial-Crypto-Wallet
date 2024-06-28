@@ -3,10 +3,13 @@ package com.app.trialcryptowallet.data
 import android.content.Context
 import android.content.SharedPreferences
 
-class PreferencesManager(context: Context) {
+private const val PREFERENCES_FILE_KEY = "preferences"
+private const val PREFERENCES_KEY_AVAILABLE_BALANCE = "available_balance"
 
-    private val sharedPreferences: SharedPreferences = context.getSharedPreferences(Constants.PREFERENCES_FILE_KEY, Context.MODE_PRIVATE)
+class PreferencesManager(context: Context): PreferencesManagerInterface {
 
-    fun getAvailableBalance(): Double = sharedPreferences.getFloat(Constants.PREFERENCES_KEY_AVAILABLE_BALANCE, 0.0f).toDouble()
-    fun setAvailableBalance(balance: Double) = sharedPreferences.edit().putFloat(Constants.PREFERENCES_KEY_AVAILABLE_BALANCE, balance.toFloat()).apply()
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_KEY, Context.MODE_PRIVATE)
+
+    override fun getAvailableBalance(): Double = sharedPreferences.getFloat(PREFERENCES_KEY_AVAILABLE_BALANCE, 0.0f).toDouble()
+    override fun setAvailableBalance(balance: Double) = sharedPreferences.edit().putFloat(PREFERENCES_KEY_AVAILABLE_BALANCE, balance.toFloat()).apply()
 }

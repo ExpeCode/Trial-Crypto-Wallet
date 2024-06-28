@@ -9,7 +9,7 @@ import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInBuyCrypto
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInSellCryptocurrencyDialog
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInWallet
 import com.app.trialcryptowallet.data.model.entity.CryptocurrencyInWalletEntity
-import com.app.trialcryptowallet.data.repository.Repository
+import com.app.trialcryptowallet.data.repository.RepositoryInterface
 import com.app.trialcryptowallet.utils.ConnectivityMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class WalletViewModel(
-    private val repository: Repository,
+    private val repository: RepositoryInterface,
     private val connectivityMonitor: ConnectivityMonitor
 ) : ViewModel() {
 

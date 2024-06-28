@@ -12,7 +12,7 @@ import com.app.trialcryptowallet.data.model.domain.ItemHistoricalChartData
 import com.app.trialcryptowallet.data.model.domain.ItemHistoricalChartPeriod
 import com.app.trialcryptowallet.data.model.entity.CryptocurrencyInWalletEntity
 import com.app.trialcryptowallet.data.network.DAY
-import com.app.trialcryptowallet.data.repository.Repository
+import com.app.trialcryptowallet.data.repository.RepositoryInterface
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ChartViewModel(
-    private val repository: Repository
+    private val repository: RepositoryInterface
 ) : ViewModel() {
 
     private val _snackBarErrorMessage = MutableSharedFlow<Error>()
