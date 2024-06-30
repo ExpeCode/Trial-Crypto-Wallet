@@ -6,4 +6,5 @@ plugins {
     alias(libs.plugins.parcelize) apply false
     alias(libs.plugins.devtools.ksp) apply false
     alias(libs.plugins.androidx.room.plugin) apply false
+    alias(libs.plugins.android.library) apply false
 }

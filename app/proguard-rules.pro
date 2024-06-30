@@ -20,4 +20,4 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class com.app.trialcryptowallet.data.model.dto.** { *; }
+-keep class com.app.trialcryptowallet.domain.model.dto.** { *; }

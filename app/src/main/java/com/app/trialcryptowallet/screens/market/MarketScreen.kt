@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import com.app.trialcryptowallet.R
-import com.app.trialcryptowallet.data.model.Error
+import com.app.trialcryptowallet.domain.model.common.Error
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInChartScreen
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInMarket
 import com.app.trialcryptowallet.ui.dialogs.BuyCryptocurrencyDialog
@@ -115,7 +115,12 @@ fun MarketScreen(
                         itemCryptocurrencyMarket = itemCryptocurrency,
                         onClickToItem = {
                             openChart.invoke(
-                                ItemCryptocurrencyInChartScreen(itemCryptocurrency.id, itemCryptocurrency.symbol, itemCryptocurrency.name, itemCryptocurrency.current_price),
+                                ItemCryptocurrencyInChartScreen(
+                                    id = itemCryptocurrency.id,
+                                    symbol = itemCryptocurrency.symbol,
+                                    name = itemCryptocurrency.name,
+                                    current_price = itemCryptocurrency.current_price
+                                ),
                                 0.0
                             )
                         },

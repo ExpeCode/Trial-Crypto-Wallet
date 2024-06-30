@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -37,14 +36,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import com.app.trialcryptowallet.R
-import com.app.trialcryptowallet.data.model.Error
+import com.app.trialcryptowallet.domain.model.common.Error
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInChartScreen
 import com.app.trialcryptowallet.data.model.domain.ItemHistoricalChartPeriod
-import com.app.trialcryptowallet.data.network.DAY
-import com.app.trialcryptowallet.data.network.HALF_YEAR
-import com.app.trialcryptowallet.data.network.MONTH
-import com.app.trialcryptowallet.data.network.WEEK
-import com.app.trialcryptowallet.data.network.YEAR
+import com.app.trialcryptowallet.domain.model.common.Days
 import com.app.trialcryptowallet.ui.components.PriceChart
 import com.app.trialcryptowallet.ui.components.TopAppBarSmall
 import com.app.trialcryptowallet.ui.dialogs.BuyCryptocurrencyDialog
@@ -76,11 +71,11 @@ fun ChartScreen(
     val colorGreen = Color(0f, 0.5f, 0f, 1f)
     val colorRed = Color(0.5f, 0f, 0f, 1f)
     val itemsHistoricalChartPeriod = listOf(
-        ItemHistoricalChartPeriod(DAY).apply { displayName = stringResource(R.string.day) },
-        ItemHistoricalChartPeriod(WEEK).apply { displayName = stringResource(R.string.week) },
-        ItemHistoricalChartPeriod(MONTH).apply { displayName = stringResource(R.string.month) },
-        ItemHistoricalChartPeriod(HALF_YEAR).apply { displayName = stringResource(R.string.half_year) },
-        ItemHistoricalChartPeriod(YEAR).apply { displayName = stringResource(R.string.year) }
+        ItemHistoricalChartPeriod(Days.Day).apply { displayName = stringResource(R.string.day) },
+        ItemHistoricalChartPeriod(Days.Week).apply { displayName = stringResource(R.string.week) },
+        ItemHistoricalChartPeriod(Days.Month).apply { displayName = stringResource(R.string.month) },
+        ItemHistoricalChartPeriod(Days.HalfYear).apply { displayName = stringResource(R.string.half_year) },
+        ItemHistoricalChartPeriod(Days.Year).apply { displayName = stringResource(R.string.year) }
     )
 
     val errorLoadingDataMessage = stringResource(R.string.error_loading_data)
@@ -172,7 +167,7 @@ fun ChartScreen(
                     PriceChart(
                         data = historicalChartData,
                         isProfitable = isProfitable,
-                        isDateWithTime = chartPeriod.days <= 90
+                        isDateWithTime = chartPeriod.days.value <= 90
                     )
                 }
 

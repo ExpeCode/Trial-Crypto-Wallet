@@ -2,17 +2,22 @@ package com.app.trialcryptowallet.screens.chart
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.trialcryptowallet.data.model.ERROR_CODE_RATE_LIMIT
-import com.app.trialcryptowallet.data.model.Error
-import com.app.trialcryptowallet.data.model.Result
+import com.app.trialcryptowallet.domain.model.common.ERROR_CODE_RATE_LIMIT
+import com.app.trialcryptowallet.domain.model.common.Error
+import com.app.trialcryptowallet.domain.model.common.Result
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInBuyCryptocurrencyDialog
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInChartScreen
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInSellCryptocurrencyDialog
 import com.app.trialcryptowallet.data.model.domain.ItemHistoricalChartData
 import com.app.trialcryptowallet.data.model.domain.ItemHistoricalChartPeriod
-import com.app.trialcryptowallet.data.model.entity.CryptocurrencyInWalletEntity
-import com.app.trialcryptowallet.data.network.DAY
-import com.app.trialcryptowallet.data.repository.RepositoryInterface
+import com.app.trialcryptowallet.domain.model.common.Days
+import com.app.trialcryptowallet.domain.model.db.CryptocurrencyInWallet
+import com.app.trialcryptowallet.domain.repository.PreferencesRepository
+import com.app.trialcryptowallet.domain.usecase.DeleteCryptocurrencyInWalletUseCase
+import com.app.trialcryptowallet.domain.usecase.FindCryptocurrencyInWalletByIdUseCase
+import com.app.trialcryptowallet.domain.usecase.GetCoinHistoricalChartDataByIdUseCase
+import com.app.trialcryptowallet.domain.usecase.InsertCryptocurrencyInWalletUseCase
+import com.app.trialcryptowallet.domain.usecase.UpdateCryptocurrencyInWalletUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -22,7 +27,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ChartViewModel(
-    private val repository: RepositoryInterface
+    private val preferencesRepository: PreferencesRepository,
+    private val getCoinHistoricalChartDataByIdUseCase: GetCoinHistoricalChartDataByIdUseCase,
+    private val findCryptocurrencyInWalletByIdUseCase: FindCryptocurrencyInWalletByIdUseCase,
+    private val updateCryptocurrencyInWalletUseCase: UpdateCryptocurrencyInWalletUseCase,
+    private val insertCryptocurrencyInWalletUseCase: InsertCryptocurrencyInWalletUseCase,
+    private val deleteCryptocurrencyInWalletUseCase: DeleteCryptocurrencyInWalletUseCase
 ) : ViewModel() {
 
     private val _snackBarErrorMessage = MutableSharedFlow<Error>()
@@ -31,7 +41,7 @@ class ChartViewModel(
     private val _itemCryptocurrencyInChartScreen = MutableStateFlow<ItemCryptocurrencyInChartScreen?>(null)
     val itemCryptocurrencyInChartScreen: StateFlow<ItemCryptocurrencyInChartScreen?> = _itemCryptocurrencyInChartScreen
 
-    private val _chartPeriod = MutableStateFlow(ItemHistoricalChartPeriod(DAY))
+    private val _chartPeriod = MutableStateFlow(ItemHistoricalChartPeriod(Days.Day))
     val chartPeriod: StateFlow<ItemHistoricalChartPeriod> = _chartPeriod
 
     private val _historicalChartData = MutableStateFlow<List<ItemHistoricalChartData>>(listOf())
@@ -52,7 +62,7 @@ class ChartViewModel(
             _amount.update { newAmount }
         } else {
             viewModelScope.launch {
-                repository.findCryptocurrencyInWalletById(newItemCryptocurrencyInChartScreen.id)?.let { cryptocurrencyInWalletEntity ->
+                findCryptocurrencyInWalletByIdUseCase(newItemCryptocurrencyInChartScreen.id)?.let { cryptocurrencyInWalletEntity ->
                     _amount.update { cryptocurrencyInWalletEntity.amount }
                 }
             }
@@ -65,12 +75,12 @@ class ChartViewModel(
     fun fetchHistoricalChartData() {
         itemCryptocurrencyInChartScreen.value?.let { itemCryptocurrencyInChartScreen ->
             viewModelScope.launch {
-                repository.getCoinHistoricalChartDataById(id = itemCryptocurrencyInChartScreen.id, days = chartPeriod.value.days).collect { resultCoinsHistoricalChartData ->
+                getCoinHistoricalChartDataByIdUseCase(id = itemCryptocurrencyInChartScreen.id, days = chartPeriod.value.days).collect { resultCoinsHistoricalChartData ->
                     when (resultCoinsHistoricalChartData) {
                         is Result.Success -> {
                             val historicalChartData = mutableListOf<ItemHistoricalChartData>()
                             resultCoinsHistoricalChartData.data.prices.forEach {
-                                historicalChartData.add(ItemHistoricalChartData(it[0].toLong(), it[1]))
+                                historicalChartData.add(ItemHistoricalChartData(unixTime = it[0].toLong(), price = it[1]))
                             }
 
                             _historicalChartData.update { historicalChartData }
@@ -88,10 +98,15 @@ class ChartViewModel(
         }
     }
 
-    fun getAvailableBalance() = repository.getAvailableBalance()
+    fun getAvailableBalance() = preferencesRepository.getAvailableBalance()
 
     fun onClickToBuy(itemCryptocurrencyInChartScreen: ItemCryptocurrencyInChartScreen) {
-        _itemCryptocurrencyInBuyCryptocurrencyDialog.update { ItemCryptocurrencyInBuyCryptocurrencyDialog(itemCryptocurrencyInChartScreen.id, itemCryptocurrencyInChartScreen.name, itemCryptocurrencyInChartScreen.current_price) }
+        _itemCryptocurrencyInBuyCryptocurrencyDialog.update {
+            ItemCryptocurrencyInBuyCryptocurrencyDialog(
+                id = itemCryptocurrencyInChartScreen.id,
+                name = itemCryptocurrencyInChartScreen.name,
+                current_price = itemCryptocurrencyInChartScreen.current_price)
+        }
     }
     fun onDismissBuyCryptocurrencyDialog() {
         _itemCryptocurrencyInBuyCryptocurrencyDialog.update { null }
@@ -99,14 +114,17 @@ class ChartViewModel(
     fun buyCryptocurrency(itemCryptocurrencyInBuyCryptocurrencyDialog: ItemCryptocurrencyInBuyCryptocurrencyDialog, amount: Double, cost: Double, onComplete: () -> Unit) {
         if (getAvailableBalance() >= cost) {
             viewModelScope.launch {
-                repository.setAvailableBalance(getAvailableBalance() - cost)
+                preferencesRepository.setAvailableBalance(getAvailableBalance() - cost)
 
-                repository.findCryptocurrencyInWalletById(itemCryptocurrencyInBuyCryptocurrencyDialog.id)?.let {
+                findCryptocurrencyInWalletByIdUseCase(itemCryptocurrencyInBuyCryptocurrencyDialog.id)?.let {
                     it.amount += amount
-                    repository.updateCryptocurrencyInWallet(it)
+                    updateCryptocurrencyInWalletUseCase(it)
                 } ?: run {
-                    val cryptocurrencyInWalletEntity = CryptocurrencyInWalletEntity(itemCryptocurrencyInBuyCryptocurrencyDialog.id, itemCryptocurrencyInBuyCryptocurrencyDialog.name, amount)
-                    repository.insertCryptocurrencyInWallet(cryptocurrencyInWalletEntity)
+                    val cryptocurrencyInWallet = CryptocurrencyInWallet(
+                        id = itemCryptocurrencyInBuyCryptocurrencyDialog.id,
+                        name = itemCryptocurrencyInBuyCryptocurrencyDialog.name,
+                        amount = amount)
+                    insertCryptocurrencyInWalletUseCase(cryptocurrencyInWallet)
                 }
 
                 onComplete.invoke()
@@ -115,7 +133,14 @@ class ChartViewModel(
     }
 
     fun onClickToSell(itemCryptocurrencyInChartScreen: ItemCryptocurrencyInChartScreen) {
-        _itemCryptocurrencyInSellCryptocurrencyDialog.update { ItemCryptocurrencyInSellCryptocurrencyDialog(itemCryptocurrencyInChartScreen.id, itemCryptocurrencyInChartScreen.symbol, itemCryptocurrencyInChartScreen.name, itemCryptocurrencyInChartScreen.current_price, amount.value) }
+        _itemCryptocurrencyInSellCryptocurrencyDialog.update {
+            ItemCryptocurrencyInSellCryptocurrencyDialog(
+                id = itemCryptocurrencyInChartScreen.id,
+                symbol = itemCryptocurrencyInChartScreen.symbol,
+                name = itemCryptocurrencyInChartScreen.name,
+                current_price = itemCryptocurrencyInChartScreen.current_price,
+                available_amount = amount.value)
+        }
     }
     fun onDismissSellCryptocurrencyDialog() {
         _itemCryptocurrencyInSellCryptocurrencyDialog.update { null }
@@ -123,14 +148,14 @@ class ChartViewModel(
     fun sellCryptocurrency(itemCryptocurrencyInSellCryptocurrencyDialog: ItemCryptocurrencyInSellCryptocurrencyDialog, amount: Double, price: Double, onComplete: () -> Unit) {
         if (itemCryptocurrencyInSellCryptocurrencyDialog.available_amount >= amount) {
             viewModelScope.launch {
-                repository.setAvailableBalance(getAvailableBalance() + price)
+                preferencesRepository.setAvailableBalance(getAvailableBalance() + price)
 
-                repository.findCryptocurrencyInWalletById(itemCryptocurrencyInSellCryptocurrencyDialog.id)?.let {
+                findCryptocurrencyInWalletByIdUseCase(itemCryptocurrencyInSellCryptocurrencyDialog.id)?.let {
                     it.amount -= amount
                     if (it.amount >= 0) {
-                        repository.updateCryptocurrencyInWallet(it)
+                        updateCryptocurrencyInWalletUseCase(it)
                     } else {
-                        repository.deleteCryptocurrencyInWallet(it)
+                        deleteCryptocurrencyInWalletUseCase(it)
                     }
                 }
 

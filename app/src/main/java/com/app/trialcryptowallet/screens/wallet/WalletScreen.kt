@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -223,7 +222,12 @@ fun WalletScreen(
                         ) {
                             CryptocurrencyItem(itemCryptocurrencyInWallet) {
                                 openChart.invoke(
-                                    ItemCryptocurrencyInChartScreen(itemCryptocurrencyInWallet.id, itemCryptocurrencyInWallet.symbol, itemCryptocurrencyInWallet.name, itemCryptocurrencyInWallet.current_price),
+                                    ItemCryptocurrencyInChartScreen(
+                                        id = itemCryptocurrencyInWallet.id,
+                                        symbol = itemCryptocurrencyInWallet.symbol,
+                                        name = itemCryptocurrencyInWallet.name,
+                                        current_price = itemCryptocurrencyInWallet.current_price
+                                    ),
                                     itemCryptocurrencyInWallet.amount
                                 )
                             }

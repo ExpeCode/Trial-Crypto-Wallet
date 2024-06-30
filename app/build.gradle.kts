@@ -3,8 +3,6 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.parcelize)
-    alias(libs.plugins.devtools.ksp)
-    alias(libs.plugins.androidx.room.plugin)
 }
 
 android {
@@ -60,17 +58,15 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-
-    room {
-        schemaDirectory("$projectDir/schemas")
-    }
 }
 
 dependencies {
 
+    implementation(project(":domain"))
+    implementation(project(":data"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.devtools.ksp.symbol.prrocessing.api)
 
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -86,15 +82,6 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     testImplementation(libs.koin.test.junit4)
-
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    annotationProcessor(libs.androidx.room.compiler)
-    ksp(libs.androidx.room.compiler)
-
-    implementation(libs.retrofit2.retrofit)
-    implementation(libs.retrofit2.converter.gson)
-    implementation(libs.okhttp3.logging.interceptor)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

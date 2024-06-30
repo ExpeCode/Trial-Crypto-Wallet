@@ -4,12 +4,18 @@ import android.net.ConnectivityManager
 import android.net.Network
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.trialcryptowallet.data.model.Result
+import com.app.trialcryptowallet.domain.model.common.Result
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInBuyCryptocurrencyDialog
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInSellCryptocurrencyDialog
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInWallet
-import com.app.trialcryptowallet.data.model.entity.CryptocurrencyInWalletEntity
-import com.app.trialcryptowallet.data.repository.RepositoryInterface
+import com.app.trialcryptowallet.domain.model.db.CryptocurrencyInWallet
+import com.app.trialcryptowallet.domain.repository.PreferencesRepository
+import com.app.trialcryptowallet.domain.usecase.DeleteCryptocurrencyInWalletUseCase
+import com.app.trialcryptowallet.domain.usecase.FindCryptocurrencyInWalletByIdUseCase
+import com.app.trialcryptowallet.domain.usecase.GetAllCryptocurrenciesInWalletUseCase
+import com.app.trialcryptowallet.domain.usecase.GetCoinsListWithMarketDataUseCase
+import com.app.trialcryptowallet.domain.usecase.InsertCryptocurrencyInWalletUseCase
+import com.app.trialcryptowallet.domain.usecase.UpdateCryptocurrencyInWalletUseCase
 import com.app.trialcryptowallet.utils.ConnectivityMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +23,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class WalletViewModel(
-    private val repository: RepositoryInterface,
+    private val preferencesRepository: PreferencesRepository,
+    private val getCoinsListWithMarketDataUseCase: GetCoinsListWithMarketDataUseCase,
+    private val getAllCryptocurrenciesInWalletUseCase: GetAllCryptocurrenciesInWalletUseCase,
+    private val findCryptocurrencyInWalletByIdUseCase: FindCryptocurrencyInWalletByIdUseCase,
+    private val updateCryptocurrencyInWalletUseCase: UpdateCryptocurrencyInWalletUseCase,
+    private val insertCryptocurrencyInWalletUseCase: InsertCryptocurrencyInWalletUseCase,
+    private val deleteCryptocurrencyInWalletUseCase: DeleteCryptocurrencyInWalletUseCase,
     private val connectivityMonitor: ConnectivityMonitor
 ) : ViewModel() {
 
@@ -27,7 +39,7 @@ class WalletViewModel(
         }
     }
 
-    private val _availableBalance = MutableStateFlow(repository.getAvailableBalance())
+    private val _availableBalance = MutableStateFlow(preferencesRepository.getAvailableBalance())
     val availableBalance: StateFlow<Double> = _availableBalance
 
     private val _balanceCrypto = MutableStateFlow(0.0)
@@ -66,7 +78,7 @@ class WalletViewModel(
     fun topUpBalance(amount: Double) {
         val newBalance = _availableBalance.value + amount
         _availableBalance.update { newBalance }
-        repository.setAvailableBalance(newBalance)
+        preferencesRepository.setAvailableBalance(newBalance)
     }
 
     fun showWithdrawFundsDialog() {
@@ -79,7 +91,7 @@ class WalletViewModel(
         if (availableBalance.value >= amount) {
             val newBalance = _availableBalance.value - amount
             _availableBalance.update { newBalance }
-            repository.setAvailableBalance(newBalance)
+            preferencesRepository.setAvailableBalance(newBalance)
         }
     }
 
@@ -90,10 +102,10 @@ class WalletViewModel(
                 val newCryptocurrenciesInWallet = mutableListOf<ItemCryptocurrencyInWallet>()
                 var newBalanceCrypto = 0.0
 
-                val allCryptocurrenciesInWalletFromDB = repository.getAllCryptocurrenciesInWallet()
+                val allCryptocurrenciesInWalletFromDB = getAllCryptocurrenciesInWalletUseCase()
                 if (allCryptocurrenciesInWalletFromDB.isNotEmpty()) {
 
-                    repository.getCoinsListWithMarketData().collect { resultCoinsListWithMarketData ->
+                    getCoinsListWithMarketDataUseCase().collect { resultCoinsListWithMarketData ->
                         if (resultCoinsListWithMarketData is Result.Success) {
                             allCryptocurrenciesInWalletFromDB.forEach { cryptocurrencyInWalletEntity ->
                                 resultCoinsListWithMarketData.data.find { cryptocurrencyDto ->
@@ -123,7 +135,12 @@ class WalletViewModel(
     }
 
     fun onClickToBuy(itemCryptocurrencyInWallet: ItemCryptocurrencyInWallet) {
-        _itemCryptocurrencyInBuyCryptocurrencyDialog.update { ItemCryptocurrencyInBuyCryptocurrencyDialog(itemCryptocurrencyInWallet.id, itemCryptocurrencyInWallet.name, itemCryptocurrencyInWallet.current_price) }
+        _itemCryptocurrencyInBuyCryptocurrencyDialog.update {
+            ItemCryptocurrencyInBuyCryptocurrencyDialog(
+                id = itemCryptocurrencyInWallet.id,
+                name = itemCryptocurrencyInWallet.name,
+                current_price = itemCryptocurrencyInWallet.current_price)
+        }
     }
     fun onDismissBuyCryptocurrencyDialog() {
         _itemCryptocurrencyInBuyCryptocurrencyDialog.update { null }
@@ -133,14 +150,17 @@ class WalletViewModel(
             viewModelScope.launch {
                 val newBalance = _availableBalance.value - cost
                 _availableBalance.update { newBalance }
-                repository.setAvailableBalance(newBalance)
+                preferencesRepository.setAvailableBalance(newBalance)
 
-                repository.findCryptocurrencyInWalletById(itemCryptocurrencyInBuyCryptocurrencyDialog.id)?.let {
+                findCryptocurrencyInWalletByIdUseCase(itemCryptocurrencyInBuyCryptocurrencyDialog.id)?.let {
                     it.amount += amount
-                    repository.updateCryptocurrencyInWallet(it)
+                    updateCryptocurrencyInWalletUseCase(it)
                 } ?: run {
-                    val cryptocurrencyInWalletEntity = CryptocurrencyInWalletEntity(itemCryptocurrencyInBuyCryptocurrencyDialog.id, itemCryptocurrencyInBuyCryptocurrencyDialog.name, amount)
-                    repository.insertCryptocurrencyInWallet(cryptocurrencyInWalletEntity)
+                    val cryptocurrencyInWalletEntity = CryptocurrencyInWallet(
+                        id = itemCryptocurrencyInBuyCryptocurrencyDialog.id,
+                        name = itemCryptocurrencyInBuyCryptocurrencyDialog.name,
+                        amount = amount)
+                    insertCryptocurrencyInWalletUseCase(cryptocurrencyInWalletEntity)
                 }
 
                 refreshCryptocurrenciesInWallet()
@@ -149,7 +169,14 @@ class WalletViewModel(
     }
 
     fun onClickToSell(itemCryptocurrencyInWallet: ItemCryptocurrencyInWallet) {
-        _itemCryptocurrencyInSellCryptocurrencyDialog.update { ItemCryptocurrencyInSellCryptocurrencyDialog(itemCryptocurrencyInWallet.id, itemCryptocurrencyInWallet.symbol, itemCryptocurrencyInWallet.name, itemCryptocurrencyInWallet.current_price, itemCryptocurrencyInWallet.amount) }
+        _itemCryptocurrencyInSellCryptocurrencyDialog.update {
+            ItemCryptocurrencyInSellCryptocurrencyDialog(
+                id = itemCryptocurrencyInWallet.id,
+                symbol = itemCryptocurrencyInWallet.symbol,
+                name = itemCryptocurrencyInWallet.name,
+                current_price = itemCryptocurrencyInWallet.current_price,
+                available_amount = itemCryptocurrencyInWallet.amount)
+        }
     }
     fun onDismissSellCryptocurrencyDialog() {
         _itemCryptocurrencyInSellCryptocurrencyDialog.update { null }
@@ -159,14 +186,14 @@ class WalletViewModel(
             viewModelScope.launch {
                 val newBalance = _availableBalance.value + price
                 _availableBalance.update { newBalance }
-                repository.setAvailableBalance(newBalance)
+                preferencesRepository.setAvailableBalance(newBalance)
 
-                repository.findCryptocurrencyInWalletById(itemCryptocurrencyInSellCryptocurrencyDialog.id)?.let {
+                findCryptocurrencyInWalletByIdUseCase(itemCryptocurrencyInSellCryptocurrencyDialog.id)?.let {
                     it.amount -= amount
                     if (it.amount >= 0) {
-                        repository.updateCryptocurrencyInWallet(it)
+                        updateCryptocurrencyInWalletUseCase(it)
                     } else {
-                        repository.deleteCryptocurrencyInWallet(it)
+                        deleteCryptocurrencyInWalletUseCase(it)
                     }
                 }
 

@@ -21,3 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Trial Crypto Wallet"
 include(":app")
+include(":domain")
+include(":data")
