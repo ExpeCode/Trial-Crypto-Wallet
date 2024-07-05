@@ -6,6 +6,7 @@ import com.app.trialcryptowallet.domain.model.db.CryptocurrencyInWallet
 import com.app.trialcryptowallet.domain.repository.WalletRepository
 
 class WalletRepositoryImpl(private val walletDao: WalletDao) : WalletRepository {
+
     override suspend fun getAllCryptocurrenciesInWallet(): List<CryptocurrencyInWallet> {
         return walletDao.getAll().map {
             CryptocurrencyInWallet(
