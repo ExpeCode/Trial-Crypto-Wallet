@@ -11,7 +11,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,6 +23,8 @@ import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInMarket
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInSellCryptocurrencyDialog
 import com.app.trialcryptowallet.data.model.domain.ItemCryptocurrencyInWallet
 import com.app.trialcryptowallet.utils.formatCurrency
+
+const val TAG_OUTLINED_TEXT_FIELD = "outlinedTextField"
 
 @Preview(showBackground = true)
 @Composable
@@ -42,7 +46,8 @@ fun WithdrawFundsDialog(
                     value = amount,
                     onValueChange = { amount = it },
                     label = { Text(stringResource(R.string.amount_title)) },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.testTag(TAG_OUTLINED_TEXT_FIELD)
                 )
                 if (!isAmountValid && amount.isNotEmpty()) {
                     Text(

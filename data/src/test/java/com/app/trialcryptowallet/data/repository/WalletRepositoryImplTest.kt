@@ -1,78 +1,81 @@
 package com.app.trialcryptowallet.data.repository
 
-import com.app.trialcryptowallet.data.db.FakeWalletDao
+import android.content.Context
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import com.app.trialcryptowallet.data.db.AppDatabase
 import com.app.trialcryptowallet.domain.model.db.CryptocurrencyInWallet
 import com.app.trialcryptowallet.domain.repository.WalletRepository
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.io.IOException
+import org.junit.Assert.*
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28])
 class WalletRepositoryImplTest {
 
-    private lateinit var walletDao: FakeWalletDao
+    private lateinit var db: AppDatabase
     private lateinit var walletRepository: WalletRepository
 
     @Before
-    fun setUp() {
-        walletDao = FakeWalletDao()
-        walletRepository = WalletRepositoryImpl(walletDao)
+    fun createDb() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+        val dao = db.walletDao()
+        walletRepository = WalletRepositoryImpl(dao)
     }
 
     @Test
-    fun `test getAllCryptocurrenciesInWallet`() = runBlocking {
-        // Given
-        val mockCryptocurrency1 = CryptocurrencyInWallet(id = "1", name = "Bitcoin", amount = 0.5)
-        val mockCryptocurrency2 = CryptocurrencyInWallet(id = "2", name = "Ethereum", amount = 0.1)
-        walletRepository.insertCryptocurrencyInWallet(mockCryptocurrency1)
-        walletRepository.insertCryptocurrencyInWallet(mockCryptocurrency2)
-
-        // When
-        val result = walletRepository.getAllCryptocurrenciesInWallet()
-
-        // Then
-        assertEquals(listOf(mockCryptocurrency1, mockCryptocurrency2), result)
+    fun insertAndReadData() = runBlocking {
+        val cryptocurrency = CryptocurrencyInWallet("1", "Bitcoin", 1.0)
+        walletRepository.insertCryptocurrencyInWallet(cryptocurrency)
+        val retrievedEntity = walletRepository.findCryptocurrencyInWalletById("1")
+        assertEquals(retrievedEntity?.name, "Bitcoin")
+        assertEquals(retrievedEntity?.amount ?: 0.0, 1.0, 0.01)
     }
 
     @Test
-    fun `test insertCryptocurrencyInWallet`() = runBlocking {
-        // Given
-        val mockCryptocurrency = CryptocurrencyInWallet(id = "1", name = "Bitcoin", amount = 0.1)
-
-        // When
-        walletRepository.insertCryptocurrencyInWallet(mockCryptocurrency)
-        val result = walletRepository.getAllCryptocurrenciesInWallet()
-
-        // Then
-        assertEquals(listOf(mockCryptocurrency), result)
+    fun deleteData() = runBlocking {
+        val cryptocurrency = CryptocurrencyInWallet("1", "Bitcoin", 1.0)
+        walletRepository.insertCryptocurrencyInWallet(cryptocurrency)
+        walletRepository.deleteCryptocurrencyInWallet(cryptocurrency)
+        val retrievedEntity = walletRepository.findCryptocurrencyInWalletById("1")
+        assertNull(retrievedEntity)
     }
 
     @Test
-    fun `test deleteCryptocurrencyInWallet`() = runBlocking {
-        // Given
-        val mockCryptocurrency = CryptocurrencyInWallet(id = "1", name = "Bitcoin", amount = 0.2)
-        walletRepository.insertCryptocurrencyInWallet(mockCryptocurrency)
-
-        // When
-        walletRepository.deleteCryptocurrencyInWallet(mockCryptocurrency)
-        val result = walletRepository.getAllCryptocurrenciesInWallet()
-
-        // Then
-        assertEquals(emptyList<CryptocurrencyInWallet>(), result)
+    fun updateData() = runBlocking {
+        val cryptocurrency = CryptocurrencyInWallet("1", "Bitcoin", 1.0)
+        walletRepository.insertCryptocurrencyInWallet(cryptocurrency)
+        cryptocurrency.amount = 2.0
+        walletRepository.updateCryptocurrencyInWallet(cryptocurrency)
+        val retrievedEntity = walletRepository.findCryptocurrencyInWalletById("1")
+        assertEquals(retrievedEntity?.amount ?: 0.0, 2.0, 0.01)
     }
 
     @Test
-    fun `test updateCryptocurrencyInWallet`() = runBlocking {
-        // Given
-        val mockCryptocurrency = CryptocurrencyInWallet(id = "1", name = "Bitcoin", amount = 0.4)
-        walletRepository.insertCryptocurrencyInWallet(mockCryptocurrency)
-        val updatedCryptocurrency = mockCryptocurrency.copy(name = "Updated Bitcoin")
+    fun getAllData() = runBlocking {
+        val cryptocurrency1 = CryptocurrencyInWallet("1", "Bitcoin", 1.0)
+        val cryptocurrency2 = CryptocurrencyInWallet("2", "Ethereum", 2.0)
+        walletRepository.insertCryptocurrencyInWallet(cryptocurrency1)
+        walletRepository.insertCryptocurrencyInWallet(cryptocurrency2)
+        val allEntities = walletRepository.getAllCryptocurrenciesInWallet()
+        assertEquals(allEntities.size, 2)
+        val entityFromDb1 = allEntities.find { it.id == cryptocurrency1.id && it.name == cryptocurrency1.name && it.amount == cryptocurrency1.amount }
+        val entityFromDb2 = allEntities.find { it.id == cryptocurrency2.id && it.name == cryptocurrency2.name && it.amount == cryptocurrency2.amount }
+        assertNotNull(entityFromDb1)
+        assertNotNull(entityFromDb2)
+    }
 
-        // When
-        walletRepository.updateCryptocurrencyInWallet(updatedCryptocurrency)
-        val result = walletRepository.getAllCryptocurrenciesInWallet()
-
-        // Then
-        assertEquals(listOf(updatedCryptocurrency), result)
+    @After
+    @Throws(IOException::class)
+    fun closeDb() {
+        db.close()
     }
 }

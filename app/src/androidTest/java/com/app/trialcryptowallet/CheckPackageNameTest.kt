@@ -1,4 +1,4 @@
-package com.app.trialcryptowallet.domain
+package com.app.trialcryptowallet
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -14,11 +14,11 @@ import org.junit.Assert.*
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 @RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
+class CheckPackageNameTest {
     @Test
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.app.trialcryptowallet.domain.test", appContext.packageName)
+        assertEquals("com.app.trialcryptowallet", appContext.packageName)
     }
 }

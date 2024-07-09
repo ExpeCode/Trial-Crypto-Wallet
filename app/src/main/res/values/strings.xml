@@ -43,5 +43,5 @@
     <string name="month">Month</string>
     <string name="half_year">6 months</string>
     <string name="year">Year</string>
-    <string name="in_wallet">In wallet: %1s %2s</string>
+    <string name="in_wallet">In wallet: %1$s %2$s</string>
 </resources>
