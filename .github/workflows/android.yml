@@ -47,6 +47,10 @@ jobs:
         if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O android-sdk.zip
 
+      - name: Create Android SDK directory
+        if: steps.cache-android-sdk.outputs.cache-hit != 'true'
+        run: mkdir -p $HOME/Android/Sdk
+
       - name: Unzip Android SDK
         if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: unzip android-sdk.zip -d $HOME/Android/Sdk
