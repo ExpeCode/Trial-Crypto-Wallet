@@ -63,6 +63,7 @@ jobs:
         if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: |
           mkdir -p $HOME/Android/Sdk/cmdline-tools/latest
+          mkdir -p $HOME/Android/Sdk/cmdline-tools/cmdline-tools
           mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools/* $HOME/Android/Sdk/cmdline-tools/latest
           echo "sdk.dir=$HOME/Android/Sdk" >> local.properties
 
