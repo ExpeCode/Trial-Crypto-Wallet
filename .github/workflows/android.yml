@@ -55,10 +55,15 @@ jobs:
         if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: unzip android-sdk.zip -d $HOME/Android/Sdk/cmdline-tools
 
+      - name: List contents of SDK directory
+        if: steps.cache-android-sdk.outputs.cache-hit != 'true'
+        run: ls -R $HOME/Android/Sdk/cmdline-tools
+
       - name: Set up Android SDK
         if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: |
-          mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
+          mkdir -p $HOME/Android/Sdk/cmdline-tools/latest
+          mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools/* $HOME/Android/Sdk/cmdline-tools/latest
           echo "sdk.dir=$HOME/Android/Sdk" >> local.properties
 
       - name: Accept Licenses
