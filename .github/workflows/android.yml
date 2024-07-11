@@ -49,17 +49,16 @@ jobs:
 
       - name: Create Android SDK directory
         if: steps.cache-android-sdk.outputs.cache-hit != 'true'
-        run: mkdir -p $HOME/Android/Sdk
+        run: mkdir -p $HOME/Android/Sdk/cmdline-tools
 
       - name: Unzip Android SDK
         if: steps.cache-android-sdk.outputs.cache-hit != 'true'
-        run: unzip android-sdk.zip -d $HOME/Android/Sdk
+        run: unzip android-sdk.zip -d $HOME/Android/Sdk/cmdline-tools
 
       - name: Set up Android SDK
         if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: |
-          mkdir -p $HOME/Android/Sdk/cmdline-tools
-          mv $HOME/Android/Sdk/cmdline-tools/* $HOME/Android/Sdk/cmdline-tools/latest
+          mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
           echo "sdk.dir=$HOME/Android/Sdk" >> local.properties
 
       - name: Accept Licenses
