@@ -34,18 +34,17 @@ jobs:
       - name: Verify Java Home
         run: echo $JAVA_HOME
 
+      - name: Update gradle.properties
+        run: echo "org.gradle.java.home=${{ env.JAVA_HOME }}" >> $GITHUB_WORKSPACE/gradle.properties
+
       - name: Decrypt Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > $KEYSTORE_PATH
 
       - name: Download dependencies
         run: ./gradlew build --stacktrace
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME }}
 
       - name: Run tests
         run: ./gradlew test --stacktrace
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME }}
 
       - name: Build release APK
         run: ./gradlew assembleRelease --stacktrace
@@ -53,7 +52,6 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          JAVA_HOME: ${{ env.JAVA_HOME }}
 
       - name: Create GitHub Release
         id: create_release
