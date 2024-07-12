@@ -28,17 +28,14 @@ jobs:
           distribution: 'zulu'
           java-version: '11'
 
+      - name: Set JAVA_HOME
+        run: echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
+
+      - name: Verify Java Home
+        run: echo $JAVA_HOME
+
       - name: Decrypt Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > $KEYSTORE_PATH
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: ${{ runner.os }}-gradle-
 
       - name: Download dependencies
         run: ./gradlew build --stacktrace
@@ -53,20 +50,8 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload APK to GitHub Release
-        id: upload-release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: $APK_PATH
-          asset_name: app-release.apk
-          asset_content_type: application/vnd.android.package-archive
-
-  create_release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
       - name: Create GitHub Release
+        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -76,3 +61,12 @@ jobs:
           body: "Release of version ${{ github.ref_name }}"
           draft: false
           prerelease: false
+
+      - name: Upload APK to GitHub Release
+        id: upload-release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: $APK_PATH
+          asset_name: app-release.apk
+          asset_content_type: application/vnd.android.package-archive
