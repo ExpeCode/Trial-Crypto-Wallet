@@ -15,7 +15,7 @@ jobs:
 
     env:
       KEYSTORE_PATH: keystore.jks
-      APK_PATH: $GITHUB_WORKSPACE/app/release/app-release.apk
+      APK_PATH: android/app/build/outputs/apk/release/app-release.apk
 
     steps:
       - name: Checkout code
@@ -60,7 +60,7 @@ jobs:
   create_release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
