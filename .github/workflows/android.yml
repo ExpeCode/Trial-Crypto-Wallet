@@ -15,7 +15,7 @@ jobs:
 
     env:
       KEYSTORE_PATH: keystore.jks
-      APK_PATH: android/app/build/outputs/apk/release/app-release.apk
+      APK_PATH: android/app/build/outputs/apk/app-release.apk
 
     steps:
       - name: Checkout code
