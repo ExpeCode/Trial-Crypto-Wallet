@@ -40,7 +40,7 @@ jobs:
           echo "org.gradle.java.home=${{ env.JAVA_HOME }}" >> $GITHUB_WORKSPACE/gradle.properties
 
       - name: Decrypt Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > $KEYSTORE_PATH
+        run: echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > $KEYSTORE_PATH
 
       - name: Download dependencies
         run: ./gradlew build --stacktrace
@@ -51,10 +51,25 @@ jobs:
       - name: Build release APK
         run: ./gradlew assembleRelease --stacktrace
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Upload APK to GitHub Release
+        id: upload-release
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: $APK_PATH
+          asset_name: app-release.apk
+          asset_content_type: application/vnd.android.package-archive
+
+  create_release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -68,7 +83,6 @@ jobs:
           prerelease: false
 
       - name: Upload APK to GitHub Release
-        id: upload-release
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
