@@ -54,6 +54,11 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Display project file tree
+        run: |
+          sudo apt-get install -y tree
+          tree -L 2
+
       - name: Check if APK exists
         run: ls -R $APK_PATH
 
