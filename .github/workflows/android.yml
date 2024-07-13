@@ -70,8 +70,8 @@ jobs:
 
       - name: Align the APK file (zipalign)
         run: |
-          $ANDROID_HOME/build-tools/30.0.3/zipalign -v -p 4 $APK_UNSIGNED_PATH \
-          $APK_PATH
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          $ANDROID_SDK_ROOT/build-tools/30.0.3/zipalign -v -p 4 $APK_UNSIGNED_PATH $APK_PATH
 
       - name: Display project file tree
         run: |
