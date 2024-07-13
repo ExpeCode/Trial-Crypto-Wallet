@@ -52,12 +52,17 @@ jobs:
         run: ./gradlew test --stacktrace
 
       - name: Build Release APK
-        run: ./gradlew
-               -PKEYSTORE_FILE="../${{ $KEYSTORE_PATH }}"
-               -PKEYSTORE_PASSWORD=${{ secrets.STORE_PASSWORD }}
-               -PSIGNING_KEY_ALIAS=${{ secrets.KEY_ALIAS }}
-               -PSIGNING_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
-          assembleRelease --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Sign APK
+        run: |
+          $JAVA_HOME/bin/apksigner sign --ks $KEYSTORE_PATH --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+          --ks-pass pass:${{ secrets.STORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+          --out $APK_SIGNED_PATH $APK_UNSIGNED_PATH
 
       - name: Display project file tree
         run: |
