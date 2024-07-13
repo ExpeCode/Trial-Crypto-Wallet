@@ -48,9 +48,6 @@ jobs:
           sed -i '/org.gradle.java.home/d' $GITHUB_WORKSPACE/gradle.properties
           echo "org.gradle.java.home=${{ env.JAVA_HOME }}" >> $GITHUB_WORKSPACE/gradle.properties
 
-      - name: Decrypt Keystore
-        run: echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > $KEYSTORE_PATH
-
       - name: Download dependencies
         run: ./gradlew build --stacktrace
 
@@ -60,6 +57,9 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
 
+      - name: Decrypt Keystore
+        run: echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > $KEYSTORE_PATH
+
       - name: Sign APK
         run: |
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore $KEYSTORE_PATH \
@@ -67,6 +67,12 @@ jobs:
 
       - name: Verify signed APK
         run: jarsigner -verify $APK_UNSIGNED_PATH
+
+      - name: Check if APK UNSIGNED exists
+        run: ls -R $APK_UNSIGNED_PATH
+
+      - name: Check if APK exists
+        run: ls -R $APK_PATH
 
       - name: Align the APK file (zipalign)
         run: |
