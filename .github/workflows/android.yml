@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: release-apk
-          path: $APK_PATH
+          path: app/build/outputs/apk/release/app-release.apk
 
   create_release:
     needs: build
