@@ -15,6 +15,9 @@ jobs:
 
     env:
       KEYSTORE_PATH: keystore.jks
+      KEYSTORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       APK_UNSIGNED_PATH: app/build/outputs/apk/release/app-release-unsigned.apk
       APK_PATH: app/build/outputs/apk/release/app-release.apk
 
@@ -30,6 +33,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
+        with:
+          api-level: 30
+          build-tools: 30.0.3
 
       - name: Set JAVA_HOME
         run: echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
@@ -53,16 +59,25 @@ jobs:
 
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Sign APK
         run: |
           $JAVA_HOME/bin/apksigner sign --ks $KEYSTORE_PATH --ks-key-alias ${{ secrets.KEY_ALIAS }} \
           --ks-pass pass:${{ secrets.STORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} \
           --out $APK_SIGNED_PATH $APK_UNSIGNED_PATH
+
+      - name: Sign APK
+        run: |
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore $KEYSTORE_PATH \
+          -storepass $KEYSTORE_PASSWORD -keypass $KEY_PASSWORD $APK_UNSIGNED_PATH $KEY_ALIAS
+
+      - name: Verify signed APK
+        run: jarsigner -verify $APK_UNSIGNED_PATH
+
+      - name: Align the APK file (zipalign)
+        run: |
+          $ANDROID_HOME/build-tools/30.0.3/zipalign -v -p 4 $APK_UNSIGNED_PATH \
+          $APK_PATH
 
       - name: Display project file tree
         run: |
