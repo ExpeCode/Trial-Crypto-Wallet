@@ -68,16 +68,16 @@ jobs:
       - name: Verify signed APK
         run: jarsigner -verify $APK_UNSIGNED_PATH
 
-      - name: Check if APK UNSIGNED exists
-        run: ls -R $APK_UNSIGNED_PATH
+      - name: Install zipalign
+        run: sdkmanager "build-tools;30.0.3"
 
-      - name: Check if APK exists
-        run: ls -R $APK_PATH
+      - name: List build-tools directory
+        run: ls -l $ANDROID_HOME/build-tools/30.0.3
 
       - name: Align the APK file (zipalign)
         run: |
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
-          $ANDROID_SDK_ROOT/build-tools/30.0.3/zipalign -v -p 4 $APK_UNSIGNED_PATH $APK_PATH
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME"
+          $ANDROID_HOME/build-tools/30.0.3/zipalign -v -p 4 $APK_UNSIGNED_PATH $APK_PATH
 
       - name: Display project file tree
         run: |
