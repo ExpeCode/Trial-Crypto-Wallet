@@ -16,8 +16,7 @@ jobs:
     env:
       KEYSTORE_PATH: keystore.jks
       APK_UNSIGNED_PATH: app/build/outputs/apk/release/app-release-unsigned.apk
-      APK_SIGNED_PATH: app/build/outputs/apk/release/app-release.apk
-      ANDROID_SDK_ROOT: $HOME/android-sdk
+      APK_PATH: app/build/outputs/apk/release/app-release.apk
 
     steps:
       - name: Checkout code
@@ -29,21 +28,19 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Install Android SDK Command Line Tools
-        run: |
-          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-          cd $ANDROID_SDK_ROOT/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip
-          mv cmdline-tools latest
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
 
-      - name: Install Android SDK components
-        run: |
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "build-tools;30.0.3" "platforms;android-30"
+      - name: Set JAVA_HOME
+        run: echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
 
-      - name: Set up Android SDK path
-        run: echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+      - name: Verify Java Home
+        run: echo $JAVA_HOME
+
+      - name: Update gradle.properties
+        run: |
+          sed -i '/org.gradle.java.home/d' $GITHUB_WORKSPACE/gradle.properties
+          echo "org.gradle.java.home=${{ env.JAVA_HOME }}" >> $GITHUB_WORKSPACE/gradle.properties
 
       - name: Decrypt Keystore
         run: echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > $KEYSTORE_PATH
@@ -54,17 +51,13 @@ jobs:
       - name: Run tests
         run: ./gradlew test --stacktrace
 
-      - name: Build release APK
-        run: ./gradlew assembleRelease --stacktrace
-
-      - name: Sign APK
-        run: |
-          $ANDROID_SDK_ROOT/build-tools/30.0.3/apksigner sign --ks $KEYSTORE_PATH --ks-key-alias ${{ secrets.KEY_ALIAS }} \
-          --ks-pass pass:${{ secrets.STORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} \
-          --out $APK_SIGNED_PATH $APK_UNSIGNED_PATH
-
-      - name: Verify APK Signature
-        run: $ANDROID_SDK_ROOT/build-tools/30.0.3/apksigner verify $APK_SIGNED_PATH
+      - name: Build Release APK
+        run: ./gradlew
+               -PKEYSTORE_FILE="../${{ $KEYSTORE_PATH }}"
+               -PKEYSTORE_PASSWORD=${{ secrets.STORE_PASSWORD }}
+               -PSIGNING_KEY_ALIAS=${{ secrets.KEY_ALIAS }}
+               -PSIGNING_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+          assembleRelease --stacktrace
 
       - name: Display project file tree
         run: |
@@ -72,7 +65,7 @@ jobs:
           tree -L 2000
 
       - name: Check if APK exists
-        run: ls -R $APK_SIGNED_PATH
+        run: ls -R $APK_PATH
 
   create_release:
     needs: build
@@ -98,6 +91,6 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: $APK_SIGNED_PATH
+          asset_path: $APK_PATH
           asset_name: app-release.apk
           asset_content_type: application/vnd.android.package-archive
