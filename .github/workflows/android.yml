@@ -3,10 +3,10 @@ name: Android CI/CD
 on:
   push:
     branches:
-      - release
+      - abc
   pull_request:
     branches:
-      - release
+      - abc
 
 jobs:
   build:
@@ -96,7 +96,7 @@ jobs:
   create_release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/release'
+    if: github.ref == 'refs/heads/abc'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
