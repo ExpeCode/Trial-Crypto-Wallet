@@ -62,12 +62,6 @@ jobs:
 
       - name: Sign APK
         run: |
-          $JAVA_HOME/bin/apksigner sign --ks $KEYSTORE_PATH --ks-key-alias ${{ secrets.KEY_ALIAS }} \
-          --ks-pass pass:${{ secrets.STORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} \
-          --out $APK_SIGNED_PATH $APK_UNSIGNED_PATH
-
-      - name: Sign APK
-        run: |
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore $KEYSTORE_PATH \
           -storepass $KEYSTORE_PASSWORD -keypass $KEY_PASSWORD $APK_UNSIGNED_PATH $KEY_ALIAS
 
