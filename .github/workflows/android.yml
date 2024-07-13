@@ -17,6 +17,7 @@ jobs:
       KEYSTORE_PATH: keystore.jks
       APK_UNSIGNED_PATH: app/build/outputs/apk/release/app-release-unsigned.apk
       APK_SIGNED_PATH: app/build/outputs/apk/release/app-release.apk
+      ANDROID_SDK_ROOT: /usr/local/android-sdk
 
     steps:
       - name: Checkout code
@@ -28,16 +29,14 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set JAVA_HOME
-        run: echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
+      - name: Download and setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 30
+          build-tools: 30.0.3
 
-      - name: Verify Java Home
-        run: echo $JAVA_HOME
-
-      - name: Update gradle.properties
-        run: |
-          sed -i '/org.gradle.java.home/d' $GITHUB_WORKSPACE/gradle.properties
-          echo "org.gradle.java.home=${{ env.JAVA_HOME }}" >> $GITHUB_WORKSPACE/gradle.properties
+      - name: Set up Android SDK path
+        run: echo "ANDROID_SDK_ROOT=/usr/local/android-sdk" >> $GITHUB_ENV
 
       - name: Decrypt Keystore
         run: echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > $KEYSTORE_PATH
@@ -53,12 +52,12 @@ jobs:
 
       - name: Sign APK
         run: |
-          $JAVA_HOME/bin/apksigner sign --ks $KEYSTORE_PATH --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+          $ANDROID_SDK_ROOT/build-tools/30.0.3/apksigner sign --ks $KEYSTORE_PATH --ks-key-alias ${{ secrets.KEY_ALIAS }} \
           --ks-pass pass:${{ secrets.STORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} \
           --out $APK_SIGNED_PATH $APK_UNSIGNED_PATH
 
       - name: Verify APK Signature
-        run: $JAVA_HOME/bin/apksigner verify $APK_SIGNED_PATH
+        run: $ANDROID_SDK_ROOT/build-tools/30.0.3/apksigner verify $APK_SIGNED_PATH
 
       - name: Display project file tree
         run: |
