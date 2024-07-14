@@ -93,7 +93,7 @@ jobs:
       - name: Extract versionName
         id: extract_version
         run: |
-          VERSION_NAME=$(grep -oP 'versionName\s+"\K[^"]+' $GITHUB_WORKSPACE/app/build.gradle)
+          VERSION_NAME=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle)
           echo $VERSION_NAME > version_name.txt
 
       - name: Upload version name artifact
