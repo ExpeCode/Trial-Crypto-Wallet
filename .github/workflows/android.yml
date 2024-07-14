@@ -92,7 +92,7 @@ jobs:
         run: |
           versionName=$(./gradlew -q printVersionName)
           echo "VERSION_NAME=${versionName}" >> $GITHUB_ENV
-          echo "version_name=${versionName}" >> $GITHUB_ENV
+          echo "version_name=${versionName}" >> "$GITHUB_OUTPUT"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4.3.4
@@ -101,7 +101,7 @@ jobs:
           path: app/build/outputs/apk/release/app-release.apk
 
     outputs:
-      versionName: ${{ steps.extract_version.outputs.versionName }}
+      versionName: ${{ steps.extract_version.outputs.version_name }}
 
   create_release:
     needs: build
