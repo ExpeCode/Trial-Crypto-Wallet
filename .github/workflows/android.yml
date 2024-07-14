@@ -89,13 +89,10 @@ jobs:
 
       - name: Extract versionName
         id: extract_version
-        run: ./gradlew printVersionName > version_name.txt
-
-      - name: Upload version name artifact
-        uses: actions/upload-artifact@v4.3.4
-        with:
-          name: version-name
-          path: version_name.txt
+        run: |
+          versionName=$(./gradlew -q printVersionName)
+          echo "version_name=${versionName}" >> $GITHUB_ENV
+          echo "::set-output name=version_name::${versionName}"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4.3.4
@@ -116,17 +113,6 @@ jobs:
         with:
           name: release-apk
 
-      - name: Download version name artifact
-        uses: actions/download-artifact@v4.1.8
-        with:
-          name: version-name
-
-      - name: Read version name
-        id: read_version
-        run: |
-          VERSION_NAME=$(cat version_name.txt | tr -d '\r')
-          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-
       - name: List downloaded artifacts
         run: ls -R
 
@@ -136,9 +122,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
-          tag_name: ${{ env.VERSION_NAME }}
-          release_name: "Release ${{ env.VERSION_NAME }}"
-          body: "Release of version ${{ env.VERSION_NAME }}"
+          tag_name: ${{ needs.build.outputs.versionName }}
+          release_name: "Release ${{ needs.build.outputs.versionName }}"
+          body: "Release of version ${{ needs.build.outputs.versionName }}"
           draft: false
           prerelease: false
 
