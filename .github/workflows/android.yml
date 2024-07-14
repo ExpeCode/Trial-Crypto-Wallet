@@ -92,7 +92,7 @@ jobs:
         run: |
           versionName=$(./gradlew -q printVersionName)
           echo "VERSION_NAME=${versionName}" >> $GITHUB_ENV
-          echo "::set-output name=version_name::${versionName}"
+          echo "version_name=${versionName}" >> $GITHUB_ENV
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4.3.4
