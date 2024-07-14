@@ -3,10 +3,10 @@ name: Android CI/CD
 on:
   push:
     branches:
-      - abc
+      - main
   pull_request:
     branches:
-      - abc
+      - main
 
 jobs:
   build:
@@ -96,7 +96,7 @@ jobs:
   create_release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/abc'
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -111,7 +111,7 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
