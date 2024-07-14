@@ -91,7 +91,7 @@ jobs:
         id: extract_version
         run: |
           versionName=$(./gradlew -q printVersionName)
-          echo "version_name=${versionName}" >> $GITHUB_ENV
+          echo "VERSION_NAME=${versionName}" >> $GITHUB_ENV
           echo "::set-output name=version_name::${versionName}"
 
       - name: Upload APK as artifact
@@ -115,14 +115,17 @@ jobs:
 
       - name: List downloaded artifacts
         run: ls -R
-
+        
+      - name: Verify versionName
+        run: echo "Version Name:${{ needs.build.outputs.versionName }}"
+        
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
-          tag_name: ${{ needs.build.outputs.versionName }}
+          tag_name: "v${{ needs.build.outputs.versionName }}"
           release_name: "Release ${{ needs.build.outputs.versionName }}"
           body: "Release of version ${{ needs.build.outputs.versionName }}"
           draft: false
