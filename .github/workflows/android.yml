@@ -87,10 +87,13 @@ jobs:
       - name: Check if APK exists
         run: ls -R $APK_PATH
 
+      - name: Install grep
+        run: sudo apt-get install -y grep
+
       - name: Extract versionName
         id: extract_version
         run: |
-          VERSION_NAME=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle)
+          VERSION_NAME=$(grep -oP 'versionName\s+"\K[^"]+' $GITHUB_WORKSPACE/app/build.gradle)
           echo $VERSION_NAME > version_name.txt
 
       - name: Upload version name artifact
