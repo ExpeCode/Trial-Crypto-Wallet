@@ -89,7 +89,7 @@ jobs:
 
       - name: Extract versionName
         id: extract_version
-        run: ./gradlew printVersionName | tee version_name.txt
+        run: ./gradlew printVersionName > version_name.txt
 
       - name: Upload version name artifact
         uses: actions/upload-artifact@v4.3.4
@@ -124,7 +124,7 @@ jobs:
       - name: Read version name
         id: read_version
         run: |
-          VERSION_NAME=$(cat version_name.txt)
+          VERSION_NAME=$(cat version_name.txt | tr -d '\r')
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
       - name: List downloaded artifacts
