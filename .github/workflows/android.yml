@@ -87,6 +87,18 @@ jobs:
       - name: Check if APK exists
         run: ls -R $APK_PATH
 
+      - name: Extract versionName
+        id: extract_version
+        run: |
+          VERSION_NAME=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle)
+          echo $VERSION_NAME > version_name.txt
+
+      - name: Upload version name artifact
+        uses: actions/upload-artifact@v4.3.4
+        with:
+          name: version-name
+          path: version_name.txt
+
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4.3.4
         with:
@@ -106,6 +118,17 @@ jobs:
         with:
           name: release-apk
 
+      - name: Download version name artifact
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: version-name
+
+      - name: Read version name
+        id: read_version
+        run: |
+          VERSION_NAME=$(cat version_name.txt)
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+
       - name: List downloaded artifacts
         run: ls -R
 
@@ -115,9 +138,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: "Release ${{ github.ref_name }}"
-          body: "Release of version ${{ github.ref_name }}"
+          tag_name: ${{ env.VERSION_NAME }}
+          release_name: "Release ${{ env.VERSION_NAME }}"
+          body: "Release of version ${{ env.VERSION_NAME }}"
           draft: false
           prerelease: false
 
