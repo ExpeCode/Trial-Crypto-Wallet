@@ -100,6 +100,9 @@ jobs:
           name: release-apk
           path: app/build/outputs/apk/release/app-release.apk
 
+    outputs:
+      versionName: ${{ steps.extract_version.outputs.versionName }}
+
   create_release:
     needs: build
     runs-on: ubuntu-latest
